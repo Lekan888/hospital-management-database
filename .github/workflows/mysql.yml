@@ -1,0 +1,46 @@
+name: Verify MySQL project
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: local-demo-only
+          MYSQL_DATABASE: hospital_portfolio_test
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import schema and fictional sample data
+        env:
+          MYSQL_CONTAINER: ${{ job.services.mysql.id }}
+        run: >-
+          docker exec -i -e MYSQL_PWD=local-demo-only "$MYSQL_CONTAINER"
+          mysql -u root hospital_portfolio_test < hospital_management.sql
+      - name: Run all eight reports
+        env:
+          MYSQL_CONTAINER: ${{ job.services.mysql.id }}
+        run: >-
+          docker exec -i -e MYSQL_PWD=local-demo-only "$MYSQL_CONTAINER"
+          mysql -u root --table hospital_portfolio_test < reports.sql
+      - name: Verify views, constraints and rollback
+        env:
+          MYSQL_CONTAINER: ${{ job.services.mysql.id }}
+        run: >-
+          docker exec -i -e MYSQL_PWD=local-demo-only "$MYSQL_CONTAINER"
+          mysql -u root --table hospital_portfolio_test < tests/verify.sql
