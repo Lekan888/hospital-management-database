@@ -9,9 +9,7 @@ doctor workload, patient activity, payments, room occupancy and medication stock
 
 ## Start here
 
-- [Database schema and relationships](docs/schema.md)
 - [Eight reporting queries](reports.sql)
-- [Project walkthrough and interview notes](docs/project-walkthrough.md)
 - [Checks for data integrity and reporting accuracy](tests/verify.sql)
 
 ## What is implemented
